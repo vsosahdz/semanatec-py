@@ -1,7 +1,7 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import numpy as np
 from joblib import load
-#from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename
 from flask_cors import CORS
 import os
 
@@ -18,6 +18,44 @@ def modelo():
     #Procesar datos de entrada 
     contenido = request.json
     print(contenido)
+    datosEntrada = np.array([
+            contenido['pH'],
+            contenido['sulphates'],
+            contenido['alcohol']
+        ])
+    #Utilizar el modelo
+    resultado=dt.predict(datosEntrada.reshape(1,-1))
+    #Regresar la salida del modelo
+    return jsonify({"Resultado":str(resultado[0])})
+
+#Envio de datos a través de Archivos
+@servidorWeb.route('/modeloFile', methods=['POST'])
+def modeloFile():
+    f = request.files['file']
+    filename=secure_filename(f.filename)
+    path=os.path.join(os.getcwd(),'files',filename)
+    f.save(path)
+    file = open(path, "r")
+    
+    for x in file:
+        info=x.split()
+    print(info)
+    datosEntrada = np.array([
+            float(info[0]),
+            float(info[1]),
+            float(info[2])
+        ])
+    #Utilizar el modelo
+    resultado=dt.predict(datosEntrada.reshape(1,-1))
+    #Regresar la salida del modelo
+    return jsonify({"Resultado":str(resultado[0])})
+
+#Envio de datos a través de Forms
+@servidorWeb.route('/modeloForm', methods=['POST'])
+def modeloForm():
+    #Procesar datos de entrada 
+    contenido = request.form
+    
     datosEntrada = np.array([
             contenido['pH'],
             contenido['sulphates'],
